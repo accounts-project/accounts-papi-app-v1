@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<flow name="scheduler-status-sync-implementation" doc:id="086c8222-3763-487b-9a48-9b5d6ea364e4" >
+		<scheduler doc:name="Scheduler" doc:id="d1869f33-6855-414b-a4bc-c43c38037551" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="MINUTES" startDelay="10"/>
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve doc:name="Retrieve" doc:id="114d06d2-3b4a-4624-89f2-5beb885b75fb" key="oslastmodified">
+			<os:default-value ><![CDATA[#[now()]]]></os:default-value>
+		</os:retrieve>
+		<http:request method="GET" doc:name="calling get accoiunts status flow Request" doc:id="8d5d85dc-29c6-4400-8ea1-e6632f8ccbb2" config-ref="HTTP_Request_configuration" path="${http.requester.postpath}" responseTimeout="4500000">
+			<http:headers ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	"transactionId": "nbjfho84tuyy96",
+	"clientId": "878898798hgu7868yyh",
+	"clientSecret": "9yujfyurybjsddiu9394jj"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	LastModifiedDate : vars.os
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="6baecfb2-01b8-4e28-adca-4a4a1a9daf0e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="scheduler-get-patch-accounts-status.cmlBatch_Job" doc:id="ccbba1ae-bb84-4b0e-b638-e91d0acca86b" maxFailedRecords="10">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="02b95771-3f9f-4019-b565-de5e0929ea3f" >
+					<ee:transform doc:name="Transform Message" doc:id="464b7baf-a4eb-42a5-a7c7-1b989db5a39c">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var keyy= payload.key
+var value= payload.value
+---
+{
+	"accountRequest" : value
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					<http:request method="PATCH" doc:name="calling patch accont status flow Request" doc:id="fa974500-254f-43f1-9269-7981da2feefd" config-ref="HTTP_Request_configuration" path="${http.requester.path}" responseTimeout="4500000">
+			<http:headers><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	"transactionId": "nbjfho84tuyy96",
+	"clientId": "878898798hgu7868yyh",
+	"clientSecret": "9yujfyurybjsddiu9394jj"
+}]]]></http:headers>
+		</http:request>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="cfd01c9f-42e2-4f2c-9bea-859978d1efb2" message="#[payload]"/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+</mule>

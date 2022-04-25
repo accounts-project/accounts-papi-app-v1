@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+   <flow name="account-papi-app-v1-main">
+        <http:listener config-ref="account-papi-app-v1-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <flow-ref doc:name="Flow Reference" doc:id="8f0e6cb1-a3c3-49d5-9065-8a50fbf05b93" name="common-initialize-variableSub_Flow"/>
+		<apikit:router config-ref="account-papi-app-v1-config" />
+		<error-handler ref="global-error-handler" />
+    </flow>
+    <flow name="account-papi-app-v1-console">
+        <http:listener config-ref="account-papi-app-v1-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="account-papi-app-v1-config" />
+		<error-handler ref="global-error-handler" />
+    </flow>
+    <flow name="post:\accounts:application\json:account-papi-app-v1-config">
+        <logger level="INFO" doc:name="Logger" doc:id="cd0e4f38-af9d-47a8-9a0e-386457d5c00d" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"flowname": flow.name,&#10;	"appname": app.name,&#10;	"transactionid": vars.requestHeader.transactionId,&#10;	"status": "before flow reference",&#10;	"datetime": now()&#10;}]'/>
+		<flow-ref doc:name="Flow Reference" doc:id="d3d269b5-216a-49f8-a728-216137fe020c" name="post-customer-papiFlow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="c8eab8c0-bbb3-4155-bd1d-f1e45a7a654e" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"flowname": flow.name,&#10;	"appname": app.name,&#10;	"transactionid": vars.requestHeader.transactionId,&#10;	"status": "after flow reference",&#10;	"datetime": now()&#10;}]'/>
+    </flow>
+</mule>

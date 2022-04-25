@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<flow name="scheduler-account-sync-implementation" doc:id="f379c7d2-4a24-4c39-aa49-814f70402a96" >
+		<scheduler doc:name="Scheduler" doc:id="02b9ba7d-f13a-4c79-9cb8-7f9ae97361c9" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="5" timeUnit="HOURS" startDelay="5"/>
+			</scheduling-strategy>
+		</scheduler>
+		<set-variable value='#[now() as Date {format:"yyyy-MM-ddTHH:mm:ss"}]' doc:name="Set Variable" doc:id="de91ca91-c83e-41bf-b860-b7f729857135" variableName="LastModifiedDate"/>
+		<os:store doc:name="Store" doc:id="09f7dc28-a6da-4e31-9b04-b97ffd1d4d7b" key="oslastmodified">
+			<os:value ><![CDATA[#[vars.LastModifiedDate]]]></os:value>
+		</os:store>
+		<http:request method="GET" doc:name="calling get account sapi flow Request" doc:id="28005bc5-f544-4370-b6c0-8bb0113f81c2" path="${http.requester.path}" config-ref="HTTP_Request_configuration" responseTimeout="45000000">
+			<http:headers ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	"transactionId": "nbjfho84tuyy96",
+	"clientId": "878898798hgu7868yyh",
+	"clientSecret": "9yujfyurybjsddiu9394jj"
+
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="3ec8a103-ad25-4560-821c-e93542a3437e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="scheduler-get-post-accounts-flowBatch_Job" doc:id="cd008268-5f65-48d8-8950-ad580e9d742c" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="10817e45-25e7-450b-b2b3-8ef509b0da9b" >
+					<ee:transform doc:name="Transform Message" doc:id="5969628f-1b46-4213-ad43-7502ef0cef4f" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var keyy= payload.key
+var value= payload.value
+---
+{
+	"accountRequest" : value 
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<http:request method="POST" doc:name="calling post accounts status sapi flow Request" doc:id="3e365001-211a-4e94-8719-838f6ef3f788" path="${http.requester.postpath}" config-ref="HTTP_Request_configuration" responseTimeout="45000000">
+			<http:headers><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	"transactionId": "nbjfho84tuyy96",
+	"clientId": "878898798hgu7868yyh",
+	"clientSecret": "9yujfyurybjsddiu9394jj"
+
+}]]]></http:headers>
+		</http:request>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="b7fd7746-81d6-46bd-912c-934fa3cde918" message="#[payload]"/>
+			</batch:on-complete>
+		</batch:job>
+		<os:store doc:name="Store" doc:id="10538bf3-e916-4e9b-9016-ffaa12538167" objectStore="Object_store" key="accountNumber">
+			<os:value><![CDATA[#[p('accountNumber')]]]></os:value>
+		</os:store>
+	</flow>
+</mule>
