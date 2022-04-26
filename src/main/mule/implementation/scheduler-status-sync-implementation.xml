@@ -43,12 +43,10 @@ payload]]></ee:set-payload>
 						<ee:transform doc:name="Transform Message" doc:id="464b7baf-a4eb-42a5-a7c7-1b989db5a39c">
 							<ee:message>
 								<ee:set-payload><![CDATA[%dw 2.0
-output application/json
-var keyy= payload.key
-var value= payload.value
+output applicatio/json
 ---
 {
-	"accountRequest" : value
+	"accountRequest": payload.value
 }]]></ee:set-payload>
 							</ee:message>
 						</ee:transform>
