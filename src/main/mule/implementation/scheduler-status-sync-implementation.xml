@@ -46,12 +46,16 @@ payload]]></ee:set-payload>
 output applicatio/json
 ---
 {
-	"accountRequest": payload.value
+	"accountRequest": payload.value[0]
 }]]></ee:set-payload>
 							</ee:message>
 						</ee:transform>
 						<http:request method="PATCH" doc:name="calling patch accont status flow Request" doc:id="fa974500-254f-43f1-9269-7981da2feefd" config-ref="HTTP_Request_configuration" path="${http.requester.path}" responseTimeout="4500000">
-			<http:headers><![CDATA[#[%dw 2.0
+			<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+payload]]]></http:body>
+							<http:headers><![CDATA[#[%dw 2.0
 output application/json
 ---
 {
