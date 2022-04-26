@@ -13,11 +13,11 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
 				<fixed-frequency frequency="5" timeUnit="HOURS" startDelay="5"/>
 			</scheduling-strategy>
 		</scheduler>
-		<set-variable value='#[now() as Date {format:"yyyy-MM-ddTHH:mm:ss"}]' doc:name="Set Variable" doc:id="de91ca91-c83e-41bf-b860-b7f729857135" variableName="LastModifiedDate"/>
-		<os:store doc:name="Store" doc:id="09f7dc28-a6da-4e31-9b04-b97ffd1d4d7b" key="oslastmodified">
-			<os:value ><![CDATA[#[vars.LastModifiedDate]]]></os:value>
-		</os:store>
-		<http:request method="GET" doc:name="calling get account sapi flow Request" doc:id="28005bc5-f544-4370-b6c0-8bb0113f81c2" path="${http.requester.path}" config-ref="HTTP_Request_configuration" responseTimeout="45000000">
+		<os:retrieve doc:name="Retrieve" doc:id="5429ba95-f11a-47a4-a2eb-d6a97b0a9917" key="lastModifieddateTime" target="lastModifieddateTime">
+			<os:default-value ><![CDATA[#[((now() - |PT48H|)>> "Asia/Kolkata") as String {format: "dd-MM-yyyy'T'hh:mm:ss"}]]]></os:default-value>
+		</os:retrieve>
+		<!-- <set-variable value="#[((now() - |PT48H|)&gt;&gt; &quot;Asia/Kolkata&quot;) as String {format: &quot;dd-MM-yyyy'T'hh:mm:ss&quot;}]" doc:name="Set Variable" doc:id="03ee7f90-ce0f-4b27-a7ce-7b492bdf080a" variableName="lastModifieddateTime"/>
+		 --><http:request method="GET" doc:name="calling get account sapi flow Request" doc:id="28005bc5-f544-4370-b6c0-8bb0113f81c2" path="${http.requester.path}" config-ref="HTTP_Request_configuration" responseTimeout="45000000">
 			<http:headers ><![CDATA[#[%dw 2.0
 output application/json
 ---
@@ -27,6 +27,11 @@ output application/json
 	"clientSecret": "9yujfyurybjsddiu9394jj"
 
 }]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"lastModifiedDateTimeVar" : vars.lastModifieddateTime
+}]]]></http:query-params>
 		</http:request>
 		<ee:transform doc:name="Transform Message" doc:id="3ec8a103-ad25-4560-821c-e93542a3437e">
 			<ee:message>
@@ -39,20 +44,23 @@ payload]]></ee:set-payload>
 		<batch:job jobName="scheduler-get-post-accounts-flowBatch_Job" doc:id="cd008268-5f65-48d8-8950-ad580e9d742c" >
 			<batch:process-records >
 				<batch:step name="Batch_Step" doc:id="10817e45-25e7-450b-b2b3-8ef509b0da9b" >
-					<ee:transform doc:name="Transform Message" doc:id="5969628f-1b46-4213-ad43-7502ef0cef4f" >
-						<ee:message >
-							<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
-var keyy= payload.key
-var value= payload.value
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="aab5fed1-6208-40f4-8435-12741fd45514" streaming="true">
+						<ee:transform doc:name="Transform Message" doc:id="5969628f-1b46-4213-ad43-7502ef0cef4f">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output applicatio/json
 ---
 {
-	"accountRequest" : value 
+	"accountRequest": payload.value[0]
 }]]></ee:set-payload>
 						</ee:message>
 					</ee:transform>
-					<http:request method="POST" doc:name="calling post accounts status sapi flow Request" doc:id="3e365001-211a-4e94-8719-838f6ef3f788" path="${http.requester.postpath}" config-ref="HTTP_Request_configuration" responseTimeout="45000000">
-			<http:headers><![CDATA[#[%dw 2.0
+						<http:request method="POST" doc:name="calling post accounts status sapi flow Request" doc:id="3e365001-211a-4e94-8719-838f6ef3f788" path="${http.requester.postpath}" config-ref="HTTP_Request_configuration" responseTimeout="45000000">
+			<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+payload]]]></http:body>
+							<http:headers><![CDATA[#[%dw 2.0
 output application/json
 ---
 {
@@ -62,6 +70,7 @@ output application/json
 
 }]]]></http:headers>
 		</http:request>
+					</batch:aggregator>
 				</batch:step>
 			</batch:process-records>
 			<batch:on-complete >
@@ -69,7 +78,7 @@ output application/json
 			</batch:on-complete>
 		</batch:job>
 		<os:store doc:name="Store" doc:id="10538bf3-e916-4e9b-9016-ffaa12538167" objectStore="Object_store" key="accountNumber">
-			<os:value><![CDATA[#[p('accountNumber')]]]></os:value>
+			<os:value><![CDATA[#[((now())>> "Asia/Kolkata") as String {format: "dd-MM-yyyy'T'hh:mm:ss"}]]]></os:value>
 		</os:store>
 	</flow>
 </mule>

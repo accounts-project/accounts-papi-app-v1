@@ -13,9 +13,6 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
 				<fixed-frequency frequency="10" timeUnit="MINUTES" startDelay="10"/>
 			</scheduling-strategy>
 		</scheduler>
-		<os:retrieve doc:name="Retrieve" doc:id="114d06d2-3b4a-4624-89f2-5beb885b75fb" key="oslastmodified">
-			<os:default-value ><![CDATA[#[now()]]]></os:default-value>
-		</os:retrieve>
 		<http:request method="GET" doc:name="calling get accoiunts status flow Request" doc:id="8d5d85dc-29c6-4400-8ea1-e6632f8ccbb2" config-ref="HTTP_Request_configuration" path="${http.requester.postpath}" responseTimeout="4500000">
 			<http:headers ><![CDATA[#[%dw 2.0
 output application/json
@@ -42,7 +39,8 @@ payload]]></ee:set-payload>
 		<batch:job jobName="scheduler-get-patch-accounts-status.cmlBatch_Job" doc:id="ccbba1ae-bb84-4b0e-b638-e91d0acca86b" maxFailedRecords="10">
 			<batch:process-records >
 				<batch:step name="Batch_Step" doc:id="02b95771-3f9f-4019-b565-de5e0929ea3f" >
-					<ee:transform doc:name="Transform Message" doc:id="464b7baf-a4eb-42a5-a7c7-1b989db5a39c">
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="36e10788-2d40-47dc-a95a-91e1f762a559" streaming="true">
+						<ee:transform doc:name="Transform Message" doc:id="464b7baf-a4eb-42a5-a7c7-1b989db5a39c">
 							<ee:message>
 								<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -54,7 +52,7 @@ var value= payload.value
 }]]></ee:set-payload>
 							</ee:message>
 						</ee:transform>
-					<http:request method="PATCH" doc:name="calling patch accont status flow Request" doc:id="fa974500-254f-43f1-9269-7981da2feefd" config-ref="HTTP_Request_configuration" path="${http.requester.path}" responseTimeout="4500000">
+						<http:request method="PATCH" doc:name="calling patch accont status flow Request" doc:id="fa974500-254f-43f1-9269-7981da2feefd" config-ref="HTTP_Request_configuration" path="${http.requester.path}" responseTimeout="4500000">
 			<http:headers><![CDATA[#[%dw 2.0
 output application/json
 ---
@@ -64,6 +62,7 @@ output application/json
 	"clientSecret": "9yujfyurybjsddiu9394jj"
 }]]]></http:headers>
 		</http:request>
+					</batch:aggregator>
 				</batch:step>
 			</batch:process-records>
 			<batch:on-complete >
