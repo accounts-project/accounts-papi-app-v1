@@ -13,7 +13,7 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
 				<fixed-frequency frequency="5" timeUnit="HOURS" startDelay="5"/>
 			</scheduling-strategy>
 		</scheduler>
-		<os:retrieve doc:name="Retrieve" doc:id="5429ba95-f11a-47a4-a2eb-d6a97b0a9917" key="lastModifieddateTime" target="lastModifieddateTime">
+		<os:retrieve doc:name="lastModifieddateTime" doc:id="5429ba95-f11a-47a4-a2eb-d6a97b0a9917" key="lastModifieddateTime" target="lastModifieddateTime">
 			<os:default-value ><![CDATA[#[((now() - |PT48H|)>> "Asia/Kolkata") as String {format: "dd-MM-yyyy'T'hh:mm:ss"}]]]></os:default-value>
 		</os:retrieve>
 		<!-- <set-variable value="#[((now() - |PT48H|)&gt;&gt; &quot;Asia/Kolkata&quot;) as String {format: &quot;dd-MM-yyyy'T'hh:mm:ss&quot;}]" doc:name="Set Variable" doc:id="03ee7f90-ce0f-4b27-a7ce-7b492bdf080a" variableName="lastModifieddateTime"/>
@@ -33,7 +33,7 @@ output application/json
 	"lastModifiedDateTimeVar" : vars.lastModifieddateTime
 }]]]></http:query-params>
 		</http:request>
-		<ee:transform doc:name="Transform Message" doc:id="3ec8a103-ad25-4560-821c-e93542a3437e">
+		<ee:transform doc:name="json-java" doc:id="3ec8a103-ad25-4560-821c-e93542a3437e">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/java
@@ -45,7 +45,7 @@ payload]]></ee:set-payload>
 			<batch:process-records >
 				<batch:step name="Batch_Step" doc:id="10817e45-25e7-450b-b2b3-8ef509b0da9b" >
 					<batch:aggregator doc:name="Batch Aggregator" doc:id="aab5fed1-6208-40f4-8435-12741fd45514" streaming="true">
-						<ee:transform doc:name="Transform Message" doc:id="5969628f-1b46-4213-ad43-7502ef0cef4f">
+						<ee:transform doc:name="mapping" doc:id="5969628f-1b46-4213-ad43-7502ef0cef4f">
 						<ee:message>
 							<ee:set-payload><![CDATA[%dw 2.0
 output applicatio/json
@@ -74,11 +74,31 @@ output application/json
 				</batch:step>
 			</batch:process-records>
 			<batch:on-complete >
-				<logger level="INFO" doc:name="Logger" doc:id="b7fd7746-81d6-46bd-912c-934fa3cde918" message="#[payload]"/>
+				<logger level="INFO" doc:name="Log batch payload" doc:id="b7fd7746-81d6-46bd-912c-934fa3cde918" message="#[payload]"/>
 			</batch:on-complete>
 		</batch:job>
 		<os:store doc:name="Store" doc:id="10538bf3-e916-4e9b-9016-ffaa12538167" objectStore="Object_store" key="accountNumber">
 			<os:value><![CDATA[#[((now())>> "Asia/Kolkata") as String {format: "dd-MM-yyyy'T'hh:mm:ss"}]]]></os:value>
 		</os:store>
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="httprequest:Error Propagate" doc:id="0d477ccb-609f-40cf-a74f-1bf67222bf6b" type="ANY">
+				<ee:transform doc:name="errorPayload" doc:id="09ad98e5-5715-42c1-a662-407a9138467a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{ 
+	"msg"		: error.description,
+	"error"		: {
+		"type"	: error.errorType.asString,
+		"title"	: error.errorType.identifier,
+		"details" : error.detailedDescription
+  }
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logpayload" doc:id="160b9f6a-912d-4038-b9ef-c76bc4fdd58d" message="#[payload]"/>
+			</on-error-propagate>
+		</error-handler>
 	</flow>
 </mule>

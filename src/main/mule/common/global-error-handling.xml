@@ -1,17 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
-	<error-handler name="global-error-handler">
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<error-handler name="globalerrorhandling:custom-errorhandler" doc:id="497f5683-7d76-4b5e-a325-3bfa6db83e06" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="dbb44a35-df1d-4ce5-bbc7-914ed5d09e57" type="ANY">
+			<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;{ &#10;	"msg"		: error.description,&#10;	"error"		: {&#10;		"type"	: error.errorType.asString,&#10;		"title"	: error.errorType.identifier,&#10;		"details" : error.detailedDescription&#10;  }&#10;}]' doc:name="Set Variable" doc:id="5ac37aee-51e1-4bb4-8c16-fcb108b39bdb" variableName="customError"/>
+			<ee:transform doc:name="Transform Message" doc:id="7cd7e754-6c09-4f0e-b0dc-25425e96fe6c" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.customError]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Flow Reference" doc:id="05c985f5-0d36-4693-ab52-578d27ffc464" name="global-error-handlingSub_Flow"/>
+		</on-error-continue>
+	</error-handler>
+	<error-handler name="globalerrorhandling:custom-errorhandler-onerrorpropagate" doc:id="7f132356-07d7-4b70-aceb-e1cd049e75f6" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9409df00-ca60-4571-9dad-02282351c81b" type="ANY">
+			<set-variable value='#[%dw 2.0&#10;output application/json&#10;---&#10;{ &#10;	"msg"		: error.description,&#10;	"error"		: {&#10;		"type"	: error.errorType.asString,&#10;		"title"	: error.errorType.identifier,&#10;		"details" : error.detailedDescription&#10;  }&#10;}]' doc:name="Set customError" doc:id="be52b7c4-acae-4aa9-b692-fd9fded71202" variableName="customError"/>
+			<ee:transform doc:name="Transform Message" doc:id="a1492268-5770-4059-9580-72e8eb2e2ce9" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.customError]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="calling subflow smtp" doc:id="567a61a0-e116-4ca9-9f82-88ee94b546d3" name="global-error-handlingSub_Flow"/>
+		</on-error-propagate>
+	</error-handler>
+	<sub-flow name="global-error-handlingSub_Flow" doc:id="58e8a48d-42a3-4eea-8956-f3c9155ddad4" >
+		<email:send doc:name="Send error message to email" doc:id="e3c48a4e-4d2a-41cd-ae23-9b17d39aaee4" config-ref="Email_SMTP" fromAddress="lakkyreddyvamsi@gmail.com" subject="mule Error message">
+			<email:to-addresses >
+				<email:to-address value="vamsilakky4780@gmail.com" />
+			</email:to-addresses>
+			<email:cc-addresses />
+			<email:body contentType="application/json" />
+		</email:send>
+	</sub-flow>
+
+	<!-- <error-handler name="global-error-handler">
             <on-error-propagate type="APIKIT:BAD_REQUEST">
                 <ee:transform>
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Bad request"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -24,7 +63,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Resource not found"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -37,7 +76,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Method not allowed"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -50,7 +89,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Not acceptable"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -63,7 +102,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Unsupported media type"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -76,7 +115,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Not Implemented"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -84,5 +123,5 @@ output application/json
                     </ee:variables>
                 </ee:transform>
             </on-error-propagate>
-        </error-handler>
+        </error-handler> -->
 	</mule>

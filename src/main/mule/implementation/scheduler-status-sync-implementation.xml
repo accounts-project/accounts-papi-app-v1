@@ -28,7 +28,7 @@ output application/json
 	LastModifiedDate : vars.os
 }]]]></http:query-params>
 		</http:request>
-		<ee:transform doc:name="Transform Message" doc:id="6baecfb2-01b8-4e28-adca-4a4a1a9daf0e" >
+		<ee:transform doc:name="json-java" doc:id="6baecfb2-01b8-4e28-adca-4a4a1a9daf0e" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/java
@@ -40,7 +40,7 @@ payload]]></ee:set-payload>
 			<batch:process-records >
 				<batch:step name="Batch_Step" doc:id="02b95771-3f9f-4019-b565-de5e0929ea3f" >
 					<batch:aggregator doc:name="Batch Aggregator" doc:id="36e10788-2d40-47dc-a95a-91e1f762a559" streaming="true">
-						<ee:transform doc:name="Transform Message" doc:id="464b7baf-a4eb-42a5-a7c7-1b989db5a39c">
+						<ee:transform doc:name="mapping" doc:id="464b7baf-a4eb-42a5-a7c7-1b989db5a39c">
 							<ee:message>
 								<ee:set-payload><![CDATA[%dw 2.0
 output applicatio/json
@@ -68,8 +68,28 @@ output application/json
 				</batch:step>
 			</batch:process-records>
 			<batch:on-complete >
-				<logger level="INFO" doc:name="Logger" doc:id="cfd01c9f-42e2-4f2c-9bea-859978d1efb2" message="#[payload]"/>
+				<logger level="INFO" doc:name="logbatchPayload" doc:id="cfd01c9f-42e2-4f2c-9bea-859978d1efb2" message="#[payload]"/>
 			</batch:on-complete>
 		</batch:job>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="ae3fd5cb-8671-4143-ac32-0077c302e5f2" type="HTTP:BAD_GATEWAY, HTTP:BAD_REQUEST, HTTP:CONNECTIVITY, HTTP:INTERNAL_SERVER_ERROR, HTTP:METHOD_NOT_ALLOWED, HTTP:NOT_ACCEPTABLE, HTTP:NOT_FOUND, HTTP:RETRY_EXHAUSTED, HTTP:SECURITY, HTTP:TIMEOUT, HTTP:TOO_MANY_REQUESTS, HTTP:UNAUTHORIZED, HTTP:UNSUPPORTED_MEDIA_TYPE">
+				<ee:transform doc:name="errorPayload" doc:id="bf79e4f9-cdac-4e62-856c-ffd3bee57739" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{ 
+	"msg"		: error.description,
+	"error"		: {
+		"type"	: error.errorType.asString,
+		"title"	: error.errorType.identifier,
+		"details" : error.detailedDescription
+  }
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="logPayload" doc:id="f2457bbd-b37e-4137-b044-1352db9a4ebc" message="#[payload]"/>
+			</on-error-propagate>
+		</error-handler>
 	</flow>
 </mule>

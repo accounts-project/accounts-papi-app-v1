@@ -8,4 +8,8 @@ http:
    path: "/api/accounts"
    postpath: "/api/accounts/status"
    
-accounNumber: "1011"
+smtp:
+  host: "Smtp.gmail.com"
+  port: "587"
+  user: "lakkyreddyvamsi@gmail.com"
+  
