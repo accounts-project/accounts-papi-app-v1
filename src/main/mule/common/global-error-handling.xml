@@ -17,7 +17,6 @@ output application/json
 vars.customError]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
-			<flow-ref doc:name="Flow Reference" doc:id="05c985f5-0d36-4693-ab52-578d27ffc464" name="global-error-handlingSub_Flow"/>
 		</on-error-continue>
 	</error-handler>
 	<error-handler name="globalerrorhandling:custom-errorhandler-onerrorpropagate" doc:id="7f132356-07d7-4b70-aceb-e1cd049e75f6" >
@@ -31,18 +30,8 @@ output application/json
 vars.customError]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
-			<flow-ref doc:name="calling subflow smtp" doc:id="567a61a0-e116-4ca9-9f82-88ee94b546d3" name="global-error-handlingSub_Flow"/>
 		</on-error-propagate>
 	</error-handler>
-	<sub-flow name="global-error-handlingSub_Flow" doc:id="58e8a48d-42a3-4eea-8956-f3c9155ddad4" >
-		<email:send doc:name="Send error message to email" doc:id="e3c48a4e-4d2a-41cd-ae23-9b17d39aaee4" config-ref="Email_SMTP" fromAddress="lakkyreddyvamsi@gmail.com" subject="mule Error message">
-			<email:to-addresses >
-				<email:to-address value="vamsilakky4780@gmail.com" />
-			</email:to-addresses>
-			<email:cc-addresses />
-			<email:body contentType="application/json" />
-		</email:send>
-	</sub-flow>
 
 	<!-- <error-handler name="global-error-handler">
             <on-error-propagate type="APIKIT:BAD_REQUEST">

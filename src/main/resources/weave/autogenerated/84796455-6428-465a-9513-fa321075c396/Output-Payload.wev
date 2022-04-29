@@ -1,7 +1,7 @@
 %dw 2.0
 
 type auto_84796455_6428_465a_9513_fa321075c396_Output_Payload = {
-  accountRequest: Array<{    Industry: String,     Type: String,     Ownership: String,     BillingCity: String,     phone: String,     Rating: String,     AnnualRevenue: Number,     Name: String,     AccountNumber: String,     status: String,     _?: Any  }>, 
+  accountResponse: Array<{    AccountNumber: String,     status: String,     _?: Any  }>, 
   _?: Any
 }
 

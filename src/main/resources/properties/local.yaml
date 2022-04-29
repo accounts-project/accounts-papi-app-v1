@@ -3,13 +3,11 @@ http:
    host: "localhost"
    port: "8082"
  requester:
-   host: "localhost"
+   host: "0.0.0.0"
    port: "8081"
    path: "/api/accounts"
    postpath: "/api/accounts/status"
    
-smtp:
-  host: "Smtp.gmail.com"
-  port: "587"
-  user: "lakkyreddyvamsi@gmail.com"
+clientid: "88b7efb75ea048c5a3ab76d3174d273a"
+clientsecret: "89B5938ED0B64E5388F2e2Dfdc9Eb745"
   

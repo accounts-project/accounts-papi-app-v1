@@ -18,9 +18,10 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
 output application/json
 ---
 {
-	"transactionId": "nbjfho84tuyy96",
-	"clientId": "878898798hgu7868yyh",
-	"clientSecret": "9yujfyurybjsddiu9394jj"
+	"transactionId": vars.requestHeader.'transactionId',
+	"clientId": p('clientid'),
+	"clientSecret": p('clientsecret')
+
 }]]]></http:headers>
 			<http:query-params ><![CDATA[#[output application/java
 ---
@@ -59,9 +60,10 @@ payload]]]></http:body>
 output application/json
 ---
 {
-	"transactionId": "nbjfho84tuyy96",
-	"clientId": "878898798hgu7868yyh",
-	"clientSecret": "9yujfyurybjsddiu9394jj"
+	"transactionId": vars.requestHeader.'transactionId',
+	"clientId": p('clientid'),
+	"clientSecret": p('clientsecret')
+
 }]]]></http:headers>
 		</http:request>
 					</batch:aggregator>

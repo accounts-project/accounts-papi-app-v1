@@ -5,7 +5,7 @@
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<flow name="post-customer-papiFlow" doc:id="84796455-6428-465a-9513-fa321075c396" >
+	<flow name="post-accounts-papiFlow" doc:id="84796455-6428-465a-9513-fa321075c396" >
 		<logger level="INFO" doc:name="startLogger" doc:id="5a2969c9-971a-4bdd-8b25-df7f61c53ad4" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"flowname": flow.name,&#10;	"appname": app.name,&#10;	"transactionid": vars.requestHeader.transactionId,&#10;	"status": "papi http request",&#10;	"datetime": now()&#10;}]'/>
 		<http:request method="POST" doc:name="accounts_sapi_request" doc:id="5c61d260-7011-40b7-afeb-f0bc621bcefe" config-ref="HTTP_Request_configuration" path="${http.requester.path}" responseTimeout="40000000">
 			<http:headers ><![CDATA[#[%dw 2.0
@@ -13,8 +13,8 @@ output application/json
 ---
 {
 	"transactionId": vars.requestHeader.'transactionId',
-	"clientId": "878898798hgu7868yyh",
-	"clientSecret": "9yujfyurybjsddiu9394jj"
+	"clientId": p('clientid'),
+	"clientSecret": p('clientsecret')
 
 }]]]></http:headers>
 		</http:request>

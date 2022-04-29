@@ -1,0 +1,13 @@
+http:
+ listner:
+   host: "localhost"
+   port: "8081"
+ requester:
+   host: "accounts-sapi-app-v1.us-e2.cloudhub.io"
+   port: "443"
+   path: "/api/accounts"
+   postpath: "/api/accounts/status"
+   
+clientid: "88b7efb75ea048c5a3ab76d3174d273a"
+clientsecret: "89B5938ED0B64E5388F2e2Dfdc9Eb745"
+
